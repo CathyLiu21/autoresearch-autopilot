@@ -1,0 +1,89 @@
+# loop.py — AUTONOMOUS ORCHESTRATOR
+import os
+import re
+import subprocess
+import sys
+from google import genai
+from google.genai import types
+
+client = genai.Client()
+
+def run_cmd(cmd: str) -> str:
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return result.stdout + result.stderr
+
+def get_current_metric() -> float:
+    output = run_cmd(f"{sys.executable} train.py")
+    match = re.search(r"METRIC_SRI:\s*(-?[0-9.]+)", output)
+    if not match:
+        raise ValueError(f"Failed to parse METRIC_SRI. Output:\n{output}")
+    return float(match.group(1))
+
+def main(iterations: int = 10):
+    best_score = get_current_metric()
+    print(f"Starting baseline METRIC_SRI: {best_score:.5f}\n")
+
+    for i in range(1, iterations + 1):
+        print(f"=== Iteration {i}/{iterations} ===")
+        
+        train_code = open("train.py").read()
+        program_doc = open("program.md").read()
+
+        prompt = f"""
+You are an expert ML Research Engineer optimizing an IoT thermal control policy.
+Here are your instructions:
+{program_doc}
+
+Current best METRIC_SRI: {best_score:.5f}
+
+Here is the current train.py:
+```python
+{train_code}
+```
+
+Propose a single concrete mathematical change to autopilot_policy in train.py to increase METRIC_SRI.
+Respond ONLY with the complete, valid Python code for train.py wrapped in ```python ... ``` fences.
+Do not provide explanations outside the code block.
+"""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+
+        # Extract generated code
+        code_match = re.search(r"```python\s*\n(.*?)\n```", response.text, re.DOTALL)
+        if not code_match:
+            print("Failed to extract code block from LLM response. Skipping.")
+            continue
+
+        new_code = code_match.group(1)
+        with open("train.py", "w") as f:
+            f.write(new_code)
+
+        # Run validation
+        eval_output = run_cmd(f"{sys.executable} train.py")
+        metric_match = re.search(r"METRIC_SRI:\s*(-?[0-9.]+)", eval_output)
+
+        if metric_match:
+            candidate_score = float(metric_match.group(1))
+            print(f"Candidate METRIC_SRI: {candidate_score:.5f}")
+
+            if candidate_score > best_score:
+                gain = candidate_score - best_score
+                best_score = candidate_score
+                print(f" Improvement detected (+{gain:.5f})! Committing.")
+                run_cmd(f'git commit -am "sri: {best_score:.5f} (iter {i})"')
+            else:
+                print(f" Regression/Stagnation ({candidate_score:.5f} <= {best_score:.5f}). Resetting.")
+                run_cmd("git reset --hard HEAD")
+        else:
+            print(f" Execution error or crash. Resetting.\n{eval_output}")
+            run_cmd("git reset --hard HEAD")
+
+        print("-" * 50)
+
+    print(f"\nOptimization loop finished. Best METRIC_SRI achieved: {best_score:.5f}")
+
+if __name__ == "__main__":
+    main(iterations=10)
