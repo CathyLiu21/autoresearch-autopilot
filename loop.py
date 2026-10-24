@@ -1,9 +1,16 @@
 # loop.py — AUTONOMOUS ORCHESTRATOR (VERTEX AI POWERED)
+import json
 import os
 import re
 import subprocess
 import sys
 from google import genai
+
+# Import plot generator if available
+try:
+    from plot_progress import generate_demo_plots
+except ImportError:
+    generate_demo_plots = lambda: None
 
 # Configure Google Cloud Credentials for Vertex AI (DeepMind Credit Tier 2)
 if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
@@ -29,6 +36,33 @@ def get_current_metric() -> float:
     if not match:
         raise ValueError(f"Failed to parse METRIC_SRI. Output:\n{output}")
     return float(match.group(1))
+
+def record_history(iteration, candidate, best, status, commit=None, desc=""):
+    history = []
+    if os.path.exists("history.json"):
+        try:
+            with open("history.json") as f:
+                history = json.load(f)
+        except Exception:
+            history = []
+    
+    history.append({
+        "iteration": iteration,
+        "candidate_sri": round(candidate, 5),
+        "best_sri": round(best, 5),
+        "status": status,
+        "commit": commit,
+        "description": desc
+    })
+
+    with open("history.json", "w") as f:
+        json.dump(history, f, indent=2)
+
+    # Automatically refresh plot
+    try:
+        generate_demo_plots()
+    except Exception as e:
+        print(f"Note: Could not refresh plot: {e}")
 
 def main(iterations: int = 10):
     best_score = get_current_metric()
@@ -84,13 +118,18 @@ Do not provide explanations outside the code block.
                 gain = candidate_score - best_score
                 best_score = candidate_score
                 print(f" Improvement detected (+{gain:.5f})! Committing.")
-                run_cmd(f'git commit -am "sri: {best_score:.5f} (iter {i})"')
+                commit_out = run_cmd(f'git commit -am "sri: {best_score:.5f} (iter {i})"')
+                commit_hash = re.search(r"\[master ([0-9a-f]+)\]", commit_out)
+                c_id = commit_hash.group(1) if commit_hash else "new"
+                record_history(i, candidate_score, best_score, "ACCEPTED", commit=c_id, desc=f"Improvement (+{gain:.3f})")
             else:
                 print(f" Regression/Stagnation ({candidate_score:.5f} <= {best_score:.5f}). Resetting.")
                 run_cmd("git reset --hard HEAD")
+                record_history(i, candidate_score, best_score, "REJECTED", desc="Stagnation/Regression")
         else:
             print(f" Execution error or crash. Resetting.\n{eval_output}")
             run_cmd("git reset --hard HEAD")
+            record_history(i, 0.0, best_score, "REJECTED", desc="Crash/Syntax error")
 
         print("-" * 50)
 
@@ -98,3 +137,4 @@ Do not provide explanations outside the code block.
 
 if __name__ == "__main__":
     main(iterations=10)
+

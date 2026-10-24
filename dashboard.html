@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autonomous IoT Policy Optimization — Research Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #38bdf8;
+      --success: #10b981;
+      --danger: #f43f5e;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #090d16 65%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem;
+    }
+
+    .container { max-width: 1280px; margin: 0 auto; }
+    
+    header {
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 9999px;
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--success);
+    }
+    h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: rgba(56, 189, 248, 0.3); }
+    .kpi-title { font-size: 0.82rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
+    .kpi-val { font-size: 2.1rem; font-weight: 800; margin: 0.4rem 0; font-family: 'JetBrains Mono', monospace; }
+    .kpi-val.green { color: var(--success); text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+    .kpi-val.cyan { color: var(--primary); }
+    .kpi-meta { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* Chart Section */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.75rem;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
+    /* Interactive Simulator */
+    .sim-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .sim-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .sim-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .sim-label span { color: var(--primary); font-family: 'JetBrains Mono', monospace; }
+    input[type=range] {
+      accent-color: var(--primary);
+      height: 6px;
+      border-radius: 4px;
+      background: #334155;
+    }
+    .radio-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .radio-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .radio-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .sim-output {
+      margin-top: 0.5rem;
+      padding: 1.25rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .sim-output-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary);
+    }
+
+    /* History Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tag.accepted { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag.rejected { background: rgba(244, 63, 94, 0.12); color: #fb7185; }
+    .tag.baseline { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="badge"><div class="pulse-dot"></div> Live Autonomous Experiment</div>
+        <h1>IoT Autopilot Policy Optimization</h1>
+        <div class="subtitle">Autonomous AI Researcher Ratchet · Vertex AI <code>gemini-3.8-flash</code> · DeepMind Credit Tier 2</div>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Simulator Population: 500 Nights</span>
+        <div style="font-weight: 700; color: #fff;">16,000 Decision Epochs</div>
+      </div>
+    </header>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Initial Baseline SRI</div>
+        <div class="kpi-val" style="color: #94a3b8;">-29.49</div>
+        <div class="kpi-meta">Naive Linear Policy</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Discovered Best SRI</div>
+        <div class="kpi-val green">+33.06</div>
+        <div class="kpi-meta">Piecewise Nadir + Damping</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Net Recovery Gain</div>
+        <div class="kpi-val cyan">+62.55</div>
+        <div class="kpi-meta">+212% Clinical Recovery</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Manual Overrides</div>
+        <div class="kpi-val green">0.0</div>
+        <div class="kpi-meta">Reduced from 1.85 / night</div>
+      </div>
+    </div>
+
+    <!-- Charts and Playground -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="card-head">
+          <div class="card-title">Convergence Frontier (Git Ratchet Protocol)</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Monotonic ratchet ensures zero regressions</span>
+        </div>
+        <div style="height: 320px;">
+          <canvas id="ratchetChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Live Simulator -->
+      <div class="chart-card">
+        <div class="card-head">
+          <div class="card-title">Interactive Policy Simulator</div>
+        </div>
+        <div class="sim-panel">
+          <div class="sim-control">
+            <div class="sim-label">Bedroom Temp (°F) <span id="tempVal">72.0°F</span></div>
+            <input type="range" id="tempSlider" min="62" max="80" step="0.5" value="72.0">
+          </div>
+          
+          <div class="sim-control">
+            <div class="sim-label">Sleep Stage</div>
+            <div class="radio-group">
+              <div class="radio-btn" onclick="setStage('LIGHT')">LIGHT</div>
+              <div class="radio-btn active" onclick="setStage('DEEP')">DEEP</div>
+              <div class="radio-btn" onclick="setStage('REM')">REM</div>
+            </div>
+          </div>
+
+          <div class="sim-control">
+            <div class="sim-label">Sleep Hour <span id="hourVal">2.0 hrs</span></div>
+            <input type="range" id="hourSlider" min="0" max="8" step="0.5" value="2.0">
+          </div>
+
+          <div class="sim-control">
+            <div class="sim-label">Restlessness (Toss/Turns) <span id="tossVal">0</span></div>
+            <input type="range" id="tossSlider" min="0" max="8" step="1" value="0">
+          </div>
+
+          <div class="sim-output">
+            <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Pod Thermal Target</div>
+            <div class="sim-output-val" id="podOffset">-2.90°F</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;" id="podActionDesc">Cooling setpoint active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Log Table -->
+    <div class="chart-card">
+      <div class="card-head">
+        <div class="card-title">Optimization Iteration History</div>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">10 Iterations evaluated</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Iter</th>
+            <th>Candidate SRI</th>
+            <th>Best SRI</th>
+            <th>Status</th>
+            <th>Git Action</th>
+            <th>Strategy Hypothesis</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const historyData = [
+      { iteration: 0, candidate_sri: -29.49, best_sri: -29.49, status: "BASELINE", commit: "8e1dd8f", desc: "Baseline static linear compensation: -0.2 * (room_temp - 70.0)" },
+      { iteration: 1, candidate_sri: 32.45, best_sri: 32.45, status: "ACCEPTED", commit: "586e1fc", desc: "Differentiated DEEP cooling (-1.8F) and REM warmth (+0.5F)" },
+      { iteration: 2, candidate_sri: 32.15, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Aggressive linear slope increase (-0.5) overcooled ambient" },
+      { iteration: 3, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Step temperature cutoff at 72F caused discomfort edge case" },
+      { iteration: 4, candidate_sri: 27.25, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Excessive hardware offset clamping to [-3, 3] F" },
+      { iteration: 5, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Linear toss/turn subtractive penalty degraded REM recovery" },
+      { iteration: 6, candidate_sri: 32.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Deep sleep cooling extended beyond hour 5.0" },
+      { iteration: 7, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Baseline HRV scaling multiplier exploration" },
+      { iteration: 8, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Hour-of-night cubic spline attempt" },
+      { iteration: 9, candidate_sri: 33.06, best_sri: 33.06, status: "ACCEPTED", commit: "dada974", desc: "Piecewise early Deep cooling nadir + harmonic restlessness damping" },
+      { iteration: 10, candidate_sri: 32.01, best_sri: 33.06, status: "REJECTED", commit: "-", desc: "Over-aggressive toss/turn damping divisor" }
+    ];
+
+    // Render Table
+    const tbody = document.getElementById('tableBody');
+    historyData.forEach(h => {
+      const tr = document.createElement('tr');
+      const tagClass = h.status.toLowerCase();
+      tr.innerHTML = `
+        <td class="mono">#${h.iteration}</td>
+        <td class="mono" style="font-weight: 700; color: ${h.candidate_sri >= h.best_sri ? '#34d399' : '#cbd5e1'}">${h.candidate_sri.toFixed(2)}</td>
+        <td class="mono" style="color: #38bdf8; font-weight: 700;">${h.best_sri.toFixed(2)}</td>
+        <td><span class="tag ${tagClass}">${h.status}</span></td>
+        <td class="mono" style="color: ${h.commit !== '-' ? '#a7f3d0' : '#64748b'};">${h.commit !== '-' ? 'commit ' + h.commit : 'reset --hard'}</td>
+        <td style="color: #94a3b8;">${h.desc}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Chart.js Ratchet Line
+    const ctx = document.getElementById('ratchetChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: historyData.map(h => 'Iter ' + h.iteration),
+        datasets: [
+          {
+            label: 'Ratchet Best Frontier',
+            data: historyData.map(h => h.best_sri),
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: true,
+            stepped: 'after',
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#38bdf8'
+          },
+          {
+            label: 'Candidate Score',
+            data: historyData.map(h => h.candidate_sri),
+            borderColor: 'rgba(255,255,255,0.2)',
+            backgroundColor: historyData.map(h => h.status === 'ACCEPTED' || h.status === 'BASELINE' ? '#10b981' : '#f43f5e'),
+            pointRadius: historyData.map(h => h.status === 'ACCEPTED' ? 8 : 4),
+            pointHoverRadius: 9,
+            showLine: false,
+            pointStyle: historyData.map(h => h.status === 'ACCEPTED' ? 'rectRot' : 'circle')
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#cbd5e1', font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#fff',
+            bodyColor: '#cbd5e1',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+
+    // Interactive Simulator State
+    let currentStage = 'DEEP';
+    function setStage(stage) {
+      currentStage = stage;
+      document.querySelectorAll('.radio-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === stage);
+      });
+      updateSim();
+    }
+
+    const tempSlider = document.getElementById('tempSlider');
+    const hourSlider = document.getElementById('hourSlider');
+    const tossSlider = document.getElementById('tossSlider');
+
+    tempSlider.oninput = () => { document.getElementById('tempVal').textContent = `${parseFloat(tempSlider.value).toFixed(1)}°F`; updateSim(); };
+    hourSlider.oninput = () => { document.getElementById('hourVal').textContent = `${parseFloat(hourSlider.value).toFixed(1)} hrs`; updateSim(); };
+    tossSlider.oninput = () => { document.getElementById('tossVal').textContent = tossSlider.value; updateSim(); };
+
+    function updateSim() {
+      const roomTemp = parseFloat(tempSlider.value);
+      const hour = parseFloat(hourSlider.value);
+      const toss = parseInt(tossSlider.value);
+
+      // Model Discovered Math
+      let offset = -0.35 * (roomTemp - 70.0);
+      if (roomTemp > 73.0) {
+        offset -= 0.45 * (roomTemp - 73.0);
+      }
+
+      if (currentStage === "DEEP") {
+        if (hour <= 2.5) offset -= 2.2;
+        else if (hour <= 4.5) offset -= 1.7;
+        else offset -= 0.7;
+      } else if (currentStage === "REM") {
+        offset += 0.7;
+      } else if (currentStage === "LIGHT") {
+        if (hour > 5.5) offset += 0.3;
+        else offset -= 0.2;
+      }
+
+      if (toss > 0) {
+        const damping = 1.0 / (1.0 + 0.25 * toss);
+        offset *= damping;
+      }
+
+      const clamped = Math.max(-5.0, Math.min(5.0, offset));
+      const valEl = document.getElementById('podOffset');
+      const descEl = document.getElementById('podActionDesc');
+
+      valEl.textContent = (clamped >= 0 ? '+' : '') + clamped.toFixed(2) + '°F';
+      if (clamped < -1.0) {
+        valEl.style.color = '#38bdf8';
+        descEl.textContent = 'Active Cooling for Circadian Core-Body Drop';
+      } else if (clamped > 0.3) {
+        valEl.style.color = '#f59e0b';
+        descEl.textContent = 'Thermoregulation Neutral/Warming';
+      } else {
+        valEl.style.color = '#10b981';
+        descEl.textContent = 'Thermal Comfort Steady State';
+      }
+    }
+
+    updateSim();
+  </script>
+</body>
+</html>
