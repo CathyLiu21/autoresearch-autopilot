@@ -1,0 +1,90 @@
+[
+  {
+    "iteration": 0,
+    "candidate_sri": -29.48881,
+    "best_sri": -29.48881,
+    "status": "BASELINE",
+    "commit": "8e1dd8f",
+    "description": "Baseline: Naive static linear ambient compensation"
+  },
+  {
+    "iteration": 1,
+    "candidate_sri": 32.44663,
+    "best_sri": 32.44663,
+    "status": "ACCEPTED",
+    "commit": "586e1fc",
+    "description": "Differentiated DEEP cooling and REM warming setpoints (+61.94 gain)"
+  },
+  {
+    "iteration": 2,
+    "candidate_sri": 32.14618,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Aggressive linear slope adjustment - caused thermal comfort penalty"
+  },
+  {
+    "iteration": 3,
+    "candidate_sri": 31.05229,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "High room temperature step cutoff at 72F - slight over-cooling"
+  },
+  {
+    "iteration": 4,
+    "candidate_sri": 27.25397,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Excessive offset clamping range reduction"
+  },
+  {
+    "iteration": 5,
+    "candidate_sri": 31.05229,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Linear toss/turn subtractive penalty - degraded REM recovery"
+  },
+  {
+    "iteration": 6,
+    "candidate_sri": 32.04510,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Deep sleep cooling extended beyond hour 5 - shivering mismatch"
+  },
+  {
+    "iteration": 7,
+    "candidate_sri": 31.37074,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Baseline HRV scaling multiplier exploration"
+  },
+  {
+    "iteration": 8,
+    "candidate_sri": 31.37074,
+    "best_sri": 32.44663,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Hour-of-night cubic spline attempt"
+  },
+  {
+    "iteration": 9,
+    "candidate_sri": 33.06498,
+    "best_sri": 33.06498,
+    "status": "ACCEPTED",
+    "commit": "dada974",
+    "description": "Piecewise early Deep cooling nadir + harmonic restlessness damping (+0.62 gain)"
+  },
+  {
+    "iteration": 10,
+    "candidate_sri": 32.01227,
+    "best_sri": 33.06498,
+    "status": "REJECTED",
+    "commit": null,
+    "description": "Over-aggressive toss/turn damping divisor"
+  }
+]
