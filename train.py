@@ -2,41 +2,39 @@
 from prepare import run_simulation
 
 PARAMS = {  # fitted by scipy.optimize (Powell) in loop_v2.py
-    'ambient_ref': 67.384071,
-    'ambient_slope': -0.406628,
-    'hot_thresh': 103.042802,
-    'hot_slope': -0.4,
-    'deep_hot_extra': -0.2,
-    'deep_offset': -2.151491,
-    'rem_offset': 1.057594,
-    'light_offset': 0.256966,
-    'hour_slope': 0.001782,
-    'toss_damp': 0.009169,
+    'ambient_ref': 67.72621,
+    'ambient_slope': -0.403188,
+    'deep_slope_adj': -0.143754,
+    'rem_slope_adj': 0.105432,
+    'deep_offset': -1.787153,
+    'rem_offset': 0.727916,
+    'light_offset': 0.232037,
+    'hour_linear': -0.105029,
+    'hour_quad': 0.012239,
+    'hrv_ref': -42.033718,
+    'hrv_slope': 0.000424,
 }
 
 
 def autopilot_policy(state: dict, params: dict = PARAMS) -> float:
-    """Calculates thermal offset based on continuous ambient elasticity, stage-
-
-    dependent hot-room compensation, and continuous circadian progression.
+    """Calculates thermal offset using stage-specific ambient elasticity,
+    a quadratic circadian trajectory (nadir dip and wake warming),
+    and baseline HRV personalization.
     """
     room_temp = state["room_temp_f"]
     stage = state["sleep_stage"]
     hour = state["hour_into_sleep"]
-    toss = state["toss_turn_count"]
+    hrv = state["baseline_hrv"]
 
-    # 1. Base ambient compensation
-    ambient_comp = params["ambient_slope"] * (room_temp - params["ambient_ref"])
+    # 1. Stage-dependent ambient elasticity across full room temperature range
+    slope = params["ambient_slope"]
+    if stage == "DEEP":
+        slope += params["deep_slope_adj"]
+    elif stage == "REM":
+        slope += params["rem_slope_adj"]
+    ambient_comp = slope * (room_temp - params["ambient_ref"])
 
-    # 2. Hot-room elasticity with stage-differentiated slope
-    if room_temp > params["hot_thresh"]:
-        excess_heat = room_temp - params["hot_thresh"]
-        effective_hot_slope = params["hot_slope"]
-        if stage == "DEEP":
-            effective_hot_slope += params["deep_hot_extra"]
-        ambient_comp += effective_hot_slope * excess_heat
-
-    # 3. Stage-specific base offsets
+    # 2. Stage-specific base thermal setpoint
     if stage == "DEEP":
         stage_offset = params["deep_offset"]
     elif stage == "REM":
@@ -44,17 +42,18 @@ def autopilot_policy(state: dict, params: dict = PARAMS) -> float:
     else:  # LIGHT
         stage_offset = params["light_offset"]
 
-    # 4. Continuous circadian ramp over sleep duration
-    circadian_offset = params["hour_slope"] * hour
+    # 3. Non-linear circadian trajectory (parabolic nadir curve)
+    circadian_offset = (
+        params["hour_linear"] * hour + params["hour_quad"] * (hour**2)
+    )
 
-    total_offset = ambient_comp + stage_offset + circadian_offset
+    # 4. Baseline HRV personalization
+    hrv_offset = params["hrv_slope"] * (hrv - params["hrv_ref"])
 
-    # 5. Restlessness damping
-    if toss > 0:
-        total_offset = total_offset / (1.0 + params["toss_damp"] * toss)
+    total_offset = ambient_comp + stage_offset + circadian_offset + hrv_offset
 
     # Clamp to hardware limits [-5.0, 5.0] F
-    return max(-5.0, min(5.0, total_offset))
+    return max(-5.0, min(5.0, float(total_offset)))
 
 
 if __name__ == "__main__":
