@@ -33,7 +33,7 @@ Powered by **Google Cloud Vertex AI (`gemini-3.8-flash`)**, this system autonomo
 | **Composite Metric (`METRIC_SRI`)** | **`-29.48881`** | **`+33.06498`** | **`+62.55379` pts (+212%)** |
 | **Population Deep Sleep Ratio** | 12.4% | **24.6%** | **+12.2% absolute gain** |
 | **Population REM Sleep Ratio** | 11.2% | **21.3%** | **+10.1% absolute gain** |
-| **Overnight HRV Recovery ($\Delta \text{RMSSD}$)** | +1.8 ms | **+6.7 ms** | **+272% autonomic recovery** |
+| **Overnight HRV Recovery (ΔRMSSD)** | +1.8 ms | **+6.7 ms** | **+272% autonomic recovery** |
 | **Manual User Overrides / Night** | 1.85 events | **0.00 events** | **100% discomfort elimination** |
 | **Total Iterations Run** | 10 iterations | 2 accepted, 8 rejected | Zero regressions committed |
 
@@ -50,11 +50,16 @@ Human sleep is intricately coupled to circadian thermoregulation. During nocturn
 ### The Sleep Recovery Index (SRI) Metric
 The evaluation benchmark tests 500 heterogeneous synthetic sleeper nights (16 epochs per night = 8,000 physiological states). The invariant composite evaluation metric is:
 
-$$\text{SRI} = (\text{Deep Sleep } \% \times 100) + (\text{REM } \% \times 50) + (\Delta \text{HRV}_{\text{overnight}} \times 1.5) - (\text{Manual Overrides} \times 40)$$
+$$
+\text{SRI} = (\text{Deep Sleep \%} \times 100) + (\text{REM \%} \times 50) + (\Delta\text{HRV}_{\text{overnight}} \times 1.5) - (\text{Manual Overrides} \times 40)
+$$
 
 Where:
-- $\Delta \text{HRV}_{\text{overnight}} = 7.0 - (2.2 \times \overline{\text{thermal strain}}) + \epsilon$: Reflects parasympathetic recovery measured via Root Mean Square of Successive Differences (RMSSD) (Shaffer & Ginsberg, 2017).
-- $\text{Manual Overrides}$: Penalized heavily ($-40.0$ pts) whenever instantaneous thermal error exceeds $3.8^\circ\text{F}$, simulating sleeper distress.
+- **$\Delta\text{HRV}_{\text{overnight}}$**: Measures autonomic parasympathetic recovery via overnight Root Mean Square of Successive Differences (RMSSD, Shaffer & Ginsberg, 2017):
+  $$
+  \Delta\text{HRV} = 7.0 - (2.2 \times \overline{\text{Thermal Strain}}) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, 1.2)
+  $$
+- **$\text{Manual Overrides}$**: Penalized heavily (-40.0 pts each) whenever instantaneous thermal error exceeds 3.8°F, indicating sleeper distress.
 
 ---
 
@@ -127,14 +132,14 @@ autoresearch-autopilot/
 ### Core Code Responsibilities
 
 #### `prepare.py` (The Ground Truth Simulator)
-Generates 500 synthetic sleeper nights with sampled latent traits:
-- Ambient room temperatures: $\mathcal{N}(71.0, 3.5^\circ\text{F})$
-- Baseline HRV: $\mathcal{N}(55.0, 15.0\text{ ms})$
+Generates 500 synthetic sleeper nights with sampled latent biological and environmental traits:
+- Ambient room temperatures: $\mathcal{N}(\mu = 71.0^\circ\text{F}, \, \sigma = 3.5^\circ\text{F})$
+- Baseline HRV (RMSSD): $\mathcal{N}(\mu = 55.0\text{ ms}, \, \sigma = 15.0\text{ ms})$
 - Thermal sensitivity index: $\mathcal{U}(0.7, 1.4)$
 - Micro-movement Poisson rates conditioned on hypnogram stages.
 
 #### `train.py` (The Agent's Discovered Policy)
-The agent optimized `autopilot_policy(state: dict) -> float` to run in **$< 0.05 \text{ ms}$** per decision using only vector-free arithmetic:
+The agent optimized `autopilot_policy(state: dict) -> float` to run in **$< 0.05\text{ ms}$** per decision using only vector-free arithmetic:
 
 ```python
 def autopilot_policy(state: dict) -> float:
@@ -199,11 +204,23 @@ def autopilot_policy(state: dict) -> float:
 
 ### Discovered Policy Analysis
 
-1. **Nonlinear Ambient Elasticity:** When ambient bedroom temperature exceeds $73^\circ\text{F}$, heat dissipation through radiation and convection drops significantly. The AI discovered a piecewise slope:
-   $$\frac{\partial \, \text{offset}}{\partial T_{\text{room}}} = \begin{cases} -0.35 & \text{if } T_{\text{room}} \le 73^\circ\text{F} \\ -0.80 & \text{if } T_{\text{room}} > 73^\circ\text{F} \end{cases}$$
-2. **Circadian Stage Dynamics:** Rather than uniform cooling, the policy applies maximal negative delta ($-2.2^\circ\text{F}$) exclusively during hours 0–2.5, decays to $-1.7^\circ\text{F}$ through hour 4.5, and shifts to $+0.7^\circ\text{F}$ warming during REM to prevent shivering.
+1. **Nonlinear Ambient Elasticity:** When ambient bedroom temperature exceeds 73°F, heat dissipation through radiation and convection drops significantly. The AI discovered a piecewise compensation slope:
+
+$$
+\frac{\partial \, \text{offset}}{\partial T_{\text{room}}} = 
+\begin{cases} 
+-0.35 & \text{if } T_{\text{room}} \le 73^\circ\text{F} \\ 
+-0.80 & \text{if } T_{\text{room}} > 73^\circ\text{F} 
+\end{cases}
+$$
+
+2. **Circadian Stage Dynamics:** Rather than uniform cooling, the policy applies maximal negative delta (-2.2°F) exclusively during hours 0–2.5, decays to -1.7°F through hour 4.5, and shifts to +0.7°F warming during REM to prevent shivering.
+
 3. **Harmonic Restlessness Attenuation:** Instead of a destabilizing step change when micro-movements spike, the AI derived a smooth harmonic low-pass filter:
-   $$\text{offset}_{\text{actual}} = \text{offset}_{\text{nominal}} \times \frac{1}{1 + 0.25 \times \text{toss\_turns}}$$
+
+$$
+\text{Offset}_{\text{damped}} = \text{Offset}_{\text{nominal}} \times \left( \frac{1}{1 + 0.25 \times \text{toss\_turns}} \right)
+$$
 
 ---
 
