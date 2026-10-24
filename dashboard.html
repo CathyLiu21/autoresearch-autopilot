@@ -308,7 +308,7 @@
       </div>
       <div style="text-align: right;">
         <span style="font-size: 0.85rem; color: var(--text-muted);">Simulator Population: 500 Nights</span>
-        <div style="font-weight: 700; color: #fff;">16,000 Decision Epochs</div>
+        <div style="font-weight: 700; color: #fff;">8,000 Decision Epochs</div>
       </div>
     </header>
 
@@ -322,17 +322,17 @@
       <div class="kpi-card">
         <div class="kpi-title">Discovered Best SRI</div>
         <div class="kpi-val green">+33.06</div>
-        <div class="kpi-meta">Piecewise Nadir + Damping</div>
+        <div class="kpi-meta">Seed 42 · held-out seeds: 33.54 ± 0.32</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">Net Recovery Gain</div>
-        <div class="kpi-val cyan">+62.55</div>
-        <div class="kpi-meta">+212% Clinical Recovery</div>
+        <div class="kpi-title">Oracle Ceiling SRI</div>
+        <div class="kpi-val cyan">39.56</div>
+        <div class="kpi-meta">Agent closed 91% of baseline→oracle gap</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">Manual Overrides</div>
-        <div class="kpi-val green">0.0</div>
-        <div class="kpi-meta">Reduced from 1.85 / night</div>
+        <div class="kpi-title">Manual Overrides / Night</div>
+        <div class="kpi-val green">0.03</div>
+        <div class="kpi-meta">Reduced from 1.39 (baseline)</div>
       </div>
     </div>
 
@@ -414,16 +414,16 @@
   <script>
     const historyData = [
       { iteration: 0, candidate_sri: -29.49, best_sri: -29.49, status: "BASELINE", commit: "8e1dd8f", desc: "Baseline static linear compensation: -0.2 * (room_temp - 70.0)" },
-      { iteration: 1, candidate_sri: 32.45, best_sri: 32.45, status: "ACCEPTED", commit: "586e1fc", desc: "Differentiated DEEP cooling (-1.8F) and REM warmth (+0.5F)" },
-      { iteration: 2, candidate_sri: 32.15, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Aggressive linear slope increase (-0.5) overcooled ambient" },
-      { iteration: 3, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Step temperature cutoff at 72F caused discomfort edge case" },
-      { iteration: 4, candidate_sri: 27.25, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Excessive hardware offset clamping to [-3, 3] F" },
-      { iteration: 5, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Linear toss/turn subtractive penalty degraded REM recovery" },
-      { iteration: 6, candidate_sri: 32.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Deep sleep cooling extended beyond hour 5.0" },
-      { iteration: 7, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Baseline HRV scaling multiplier exploration" },
-      { iteration: 8, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Hour-of-night cubic spline attempt" },
-      { iteration: 9, candidate_sri: 33.06, best_sri: 33.06, status: "ACCEPTED", commit: "dada974", desc: "Piecewise early Deep cooling nadir + harmonic restlessness damping" },
-      { iteration: 10, candidate_sri: 32.01, best_sri: 33.06, status: "REJECTED", commit: "-", desc: "Over-aggressive toss/turn damping divisor" }
+      { iteration: 1, candidate_sri: 32.45, best_sri: 32.45, status: "ACCEPTED", commit: "586e1fc", desc: "Stage offsets (DEEP -1.8/-0.8F, REM +0.8F, LIGHT -0.2F), piecewise ambient slope, toss/turn damping" },
+      { iteration: 2, candidate_sri: 32.15, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
+      { iteration: 3, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
+      { iteration: 4, candidate_sri: 27.25, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
+      { iteration: 5, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged (same score as iter 3)" },
+      { iteration: 6, candidate_sri: 32.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
+      { iteration: 7, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
+      { iteration: 8, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged (same score as iter 7)" },
+      { iteration: 9, candidate_sri: 33.06, best_sri: 33.06, status: "ACCEPTED", commit: "dada974", desc: "Continuous ambient slope (-0.35, extra -0.45 above 73F), 3-tier DEEP cooling, REM +0.7F, late LIGHT +0.3F" },
+      { iteration: 10, candidate_sri: 32.01, best_sri: 33.06, status: "REJECTED", commit: "-", desc: "Proposal not logged" }
     ];
 
     // Render Table

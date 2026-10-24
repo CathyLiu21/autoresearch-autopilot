@@ -48,12 +48,14 @@ def generate_demo_plots():
             ax1.scatter(i, cand, color='#f43f5e', s=55, marker='x', alpha=0.75, zorder=4, label='Rejected Regression' if i == 2 else "")
 
     ax1.axhline(0, color='#64748b', linestyle=':', alpha=0.5)
+    # Oracle ceiling: policy that outputs the simulator's own ideal offsets (measured, seed 42)
+    ax1.axhline(39.556, color='#f59e0b', linestyle='--', linewidth=1.5, alpha=0.8, label='Oracle ceiling (39.56)')
     ax1.set_title("Autonomous AI Research Ratchet: Sleep Recovery Index (SRI) Frontier", fontsize=15, fontweight='bold', pad=12, color='#f8fafc')
     ax1.set_xlabel("Optimization Iteration", fontsize=11, color='#94a3b8')
     ax1.set_ylabel("Metric SRI (Score)", fontsize=11, color='#94a3b8')
     ax1.set_xticks(iters)
     ax1.legend(loc='lower right', framealpha=0.8, facecolor='#1e293b', edgecolor='#334155', fontsize=10)
-    ax1.set_ylim(-35, 40)
+    ax1.set_ylim(-35, 45)
 
     # -------------------------------------------------------------
     # 2. Bottom Left Panel: Discovered Control Policy Surface
@@ -99,31 +101,30 @@ def generate_demo_plots():
     ax3.set_facecolor('#111827')
     ax3.grid(True, linestyle='--', alpha=0.25, color='#94a3b8')
 
-    metrics = ['Deep Sleep %', 'REM Sleep %', 'HRV Delta (ms)', 'Manual Overrides']
-    # Baseline vs Final discovered population outcomes
-    baseline_vals = [12.4, 11.2, 1.8, 1.85]
-    discovered_vals = [24.6, 21.3, 6.7, 0.0]
+    metrics = ['Deep Sleep %', 'REM Sleep %', 'HRV Delta', 'Overrides / Night']
+    # Measured on seed 42 by replicating prepare.py's component calculations
+    baseline_vals = [8.358, 24.018, 3.883, 1.392]
+    discovered_vals = [15.190, 22.793, 5.119, 0.030]
+    oracle_vals = [17.958, 25.000, 6.865, 0.030]
 
     x = np.arange(len(metrics))
-    width = 0.36
+    width = 0.26
 
-    rects1 = ax3.bar(x - width/2, baseline_vals, width, label='Baseline Policy', color='#475569', edgecolor='#94a3b8', alpha=0.9)
-    rects2 = ax3.bar(x + width/2, discovered_vals, width, label='AI Discovered Policy', color='#10b981', edgecolor='#34d399', alpha=0.9)
+    rects1 = ax3.bar(x - width, baseline_vals, width, label='Baseline Policy', color='#475569', edgecolor='#94a3b8', alpha=0.9)
+    rects2 = ax3.bar(x, discovered_vals, width, label='AI Discovered Policy', color='#10b981', edgecolor='#34d399', alpha=0.9)
+    rects3 = ax3.bar(x + width, oracle_vals, width, label='Oracle Ceiling', color='#b45309', edgecolor='#f59e0b', alpha=0.9)
 
-    ax3.set_title("500-Night Population Clinical Recovery Impact", fontsize=12, fontweight='bold', pad=10, color='#f8fafc')
+    ax3.set_title("Simulated Sleep Components (500 nights, seed 42)", fontsize=12, fontweight='bold', pad=10, color='#f8fafc')
     ax3.set_xticks(x)
     ax3.set_xticklabels(metrics, fontsize=9.5, color='#cbd5e1')
     ax3.legend(loc='upper right', framealpha=0.8, facecolor='#1e293b', edgecolor='#334155', fontsize=8.5)
     ax3.set_ylabel("Impact Metric Value", fontsize=10, color='#94a3b8')
 
-    for rect in rects1:
-        h = rect.get_height()
-        ax3.annotate(f'{h:.1f}', xy=(rect.get_x() + rect.get_width() / 2, h),
-                     xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', fontsize=8, color='#94a3b8')
-    for rect in rects2:
-        h = rect.get_height()
-        ax3.annotate(f'{h:.1f}', xy=(rect.get_x() + rect.get_width() / 2, h),
-                     xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', fontsize=8, fontweight='bold', color='#34d399')
+    for rects, col in ((rects1, '#94a3b8'), (rects2, '#34d399'), (rects3, '#fbbf24')):
+        for rect in rects:
+            h = rect.get_height()
+            ax3.annotate(f'{h:.2f}' if h < 1 else f'{h:.1f}', xy=(rect.get_x() + rect.get_width() / 2, h),
+                         xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', fontsize=7.5, color=col)
 
     plt.savefig("autoresearch_demo_plot.png", dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
     print("Demo plot successfully generated and saved to autoresearch_demo_plot.png")
