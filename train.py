@@ -16,27 +16,31 @@ def autopilot_policy(state: dict) -> float:
     hour = state["hour_into_sleep"]
     toss = state["toss_turn_count"]
 
-    # 1. Ambient Elasticity: steeper negative compensation when hot
-    ambient_diff = room_temp - 70.0
+    # 1. Ambient Elasticity: continuous negative compensation, steeper when room > 73°F
+    offset = -0.35 * (room_temp - 70.0)
     if room_temp > 73.0:
-        offset = -0.6 * ambient_diff
-    else:
-        offset = -0.3 * ambient_diff
+        offset -= 0.45 * (room_temp - 73.0)
 
     # 2. Sleep stage & circadian modulation
     if stage == "DEEP":
         # Active thermal cooling in first half of night (hours 1-4) for body temperature nadir
-        if hour <= 4.0:
-            offset -= 1.8
+        if hour <= 2.5:
+            offset -= 2.2
+        elif hour <= 4.5:
+            offset -= 1.7
         else:
-            offset -= 0.8
+            offset -= 0.7
     elif stage == "REM":
         # Thermoregulation suspended: counteract over-cooling with modest warmth
-        offset += 0.8
+        offset += 0.7
     elif stage == "LIGHT":
-        offset -= 0.2
+        # Neutral to slight warmth towards waking hours
+        if hour > 5.5:
+            offset += 0.3
+        else:
+            offset -= 0.2
 
-    # 3. Restlessness / Toss & Turn Modulation: damp offsets when discomfort is high
+    # 3. Restlessness / Toss & Turn Modulation: damp extreme offsets when restlessness is high
     if toss > 0:
         damping = 1.0 / (1.0 + 0.25 * toss)
         offset *= damping
