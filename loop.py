@@ -1,12 +1,23 @@
-# loop.py — AUTONOMOUS ORCHESTRATOR
+# loop.py — AUTONOMOUS ORCHESTRATOR (VERTEX AI POWERED)
 import os
 import re
 import subprocess
 import sys
 from google import genai
-from google.genai import types
 
-client = genai.Client()
+# Configure Google Cloud Credentials for Vertex AI (DeepMind Credit Tier 2)
+if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
+    for path in ["service_account.json", "../service_account.json"]:
+        if os.path.exists(path):
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.abspath(path)
+            break
+
+# Initialize Vertex AI Client
+PROJECT_ID = "gemini-build-day-481122"
+LOCATION = "global"
+MODEL_NAME = "gemini-3.8-flash"
+
+client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
 def run_cmd(cmd: str) -> str:
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
@@ -47,7 +58,7 @@ Do not provide explanations outside the code block.
 """
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=MODEL_NAME,
             contents=prompt,
         )
 
