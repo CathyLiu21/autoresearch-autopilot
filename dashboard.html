@@ -321,13 +321,13 @@
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Discovered Best SRI</div>
-        <div class="kpi-val green">+33.06</div>
-        <div class="kpi-meta">Seed 42 · held-out seeds: 33.54 ± 0.32</div>
+        <div class="kpi-val green">+39.74</div>
+        <div class="kpi-meta">Acceptance: 39.74 · held-out: 39.54 ± 0.43</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Oracle Ceiling SRI</div>
-        <div class="kpi-val cyan">39.56</div>
-        <div class="kpi-meta">Agent closed 91% of baseline→oracle gap</div>
+        <div class="kpi-val cyan">39.94</div>
+        <div class="kpi-meta">Agent closed 99.5% of baseline→oracle gap</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Manual Overrides / Night</div>
@@ -393,7 +393,7 @@
     <div class="chart-card">
       <div class="card-head">
         <div class="card-title">Optimization Iteration History</div>
-        <span style="font-size: 0.85rem; color: var(--text-muted);">10 Iterations evaluated</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">15 Iterations evaluated · 20 seeds/run</span>
       </div>
       <table>
         <thead>
@@ -413,17 +413,21 @@
 
   <script>
     const historyData = [
-      { iteration: 0, candidate_sri: -29.49, best_sri: -29.49, status: "BASELINE", commit: "8e1dd8f", desc: "Baseline static linear compensation: -0.2 * (room_temp - 70.0)" },
-      { iteration: 1, candidate_sri: 32.45, best_sri: 32.45, status: "ACCEPTED", commit: "586e1fc", desc: "Stage offsets (DEEP -1.8/-0.8F, REM +0.8F, LIGHT -0.2F), piecewise ambient slope, toss/turn damping" },
-      { iteration: 2, candidate_sri: 32.15, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
-      { iteration: 3, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
-      { iteration: 4, candidate_sri: 27.25, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
-      { iteration: 5, candidate_sri: 31.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged (same score as iter 3)" },
-      { iteration: 6, candidate_sri: 32.05, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
-      { iteration: 7, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged" },
-      { iteration: 8, candidate_sri: 31.37, best_sri: 32.45, status: "REJECTED", commit: "-", desc: "Proposal not logged (same score as iter 7)" },
-      { iteration: 9, candidate_sri: 33.06, best_sri: 33.06, status: "ACCEPTED", commit: "dada974", desc: "Continuous ambient slope (-0.35, extra -0.45 above 73F), 3-tier DEEP cooling, REM +0.7F, late LIGHT +0.3F" },
-      { iteration: 10, candidate_sri: 32.01, best_sri: 33.06, status: "REJECTED", commit: "-", desc: "Proposal not logged" }
+      { iteration: 0, candidate_sri: 33.54, best_sri: 33.54, status: "BASELINE", commit: "920d31a", desc: "Incumbent starting policy (v1 winner)" },
+      { iteration: 1, candidate_sri: 38.33, best_sri: 38.33, status: "ACCEPTED", commit: "3f0686b", desc: "Continuous circadian warming ramp (hour_slope * hour) and stage-dependent ambient elasticity" },
+      { iteration: 2, candidate_sri: 39.64, best_sri: 39.64, status: "ACCEPTED", commit: "c87d51f", desc: "Stage-dependent ambient slopes (deep_slope_adj, rem_slope_adj) reflecting autonomic thermoregulation" },
+      { iteration: 3, candidate_sri: 39.57, best_sri: 39.64, status: "REJECTED", commit: "-", desc: "Asymmetric hot room slope (mean gain -0.06 SRI, paired t-test rejected)" },
+      { iteration: 4, candidate_sri: 39.53, best_sri: 39.64, status: "REJECTED", commit: "-", desc: "Smooth quadratic ambient curvature + toss-turn damping (mean gain -0.11 SRI)" },
+      { iteration: 5, candidate_sri: 39.74, best_sri: 39.74, status: "ACCEPTED", commit: "e58b051", desc: "Parabolic circadian nadir curve + early deep sleep assist + REM over-cooling floor (SciPy fitted)" },
+      { iteration: 9, candidate_sri: 39.65, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Remove inert rem_min_offset floor (mean gain -0.08 SRI)" },
+      { iteration: 10, candidate_sri: 39.76, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Restlessness cross-coupling with bedroom temperature (LCB +0.021 < 0.050 MIN_EFFECT)" },
+      { iteration: 11, candidate_sri: 39.76, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Circadian x ambient interaction term (LCB +0.023 < 0.050 MIN_EFFECT)" },
+      { iteration: 12, candidate_sri: 39.64, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Asymmetric hot bedroom elasticity (mean gain -0.096 SRI)" },
+      { iteration: 13, candidate_sri: 39.74, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Cubic circadian late-night ramp (LCB +0.002 < 0.050 MIN_EFFECT)" },
+      { iteration: 14, candidate_sri: 39.75, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Smooth exponential REM over-cooling barrier (LCB +0.016 < 0.050 MIN_EFFECT)" },
+      { iteration: 15, candidate_sri: 39.67, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Piecewise linear hot room elasticity with stage interaction (mean gain -0.069 SRI)" },
+      { iteration: 16, candidate_sri: 39.75, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Softplus thermal floor in REM sleep (LCB +0.015 < 0.050 MIN_EFFECT)" },
+      { iteration: 17, candidate_sri: 39.77, best_sri: 39.74, status: "REJECTED", commit: "-", desc: "Dynamic light sleep trajectory (light_hour_slope * hour) (LCB +0.030 < 0.050 MIN_EFFECT)" }
     ];
 
     // Render Table
@@ -515,29 +519,43 @@
       const hour = parseFloat(hourSlider.value);
       const toss = parseInt(tossSlider.value);
 
-      // Model Discovered Math
-      let offset = -0.35 * (roomTemp - 70.0);
-      if (roomTemp > 73.0) {
-        offset -= 0.45 * (roomTemp - 73.0);
-      }
+      // Model Discovered Math (PARAMS from train.py)
+      const PARAMS = {
+        ambient_ref: 68.074612,
+        ambient_slope: -0.406405,
+        deep_slope_adj: -0.143311,
+        rem_slope_adj: 0.106406,
+        deep_offset: -2.070476,
+        deep_hour_slope: 0.073124,
+        rem_offset: 0.705788,
+        light_offset: 0.183407,
+        hour_linear: -0.106673,
+        hour_quad: 0.011499,
+        rem_min_offset: -6.96538
+      };
 
+      let slope = PARAMS.ambient_slope;
+      if (currentStage === "DEEP") slope += PARAMS.deep_slope_adj;
+      else if (currentStage === "REM") slope += PARAMS.rem_slope_adj;
+      const ambientComp = slope * (roomTemp - PARAMS.ambient_ref);
+
+      let stageOffset = 0;
       if (currentStage === "DEEP") {
-        if (hour <= 2.5) offset -= 2.2;
-        else if (hour <= 4.5) offset -= 1.7;
-        else offset -= 0.7;
+        stageOffset = PARAMS.deep_offset + PARAMS.deep_hour_slope * hour;
       } else if (currentStage === "REM") {
-        offset += 0.7;
-      } else if (currentStage === "LIGHT") {
-        if (hour > 5.5) offset += 0.3;
-        else offset -= 0.2;
+        stageOffset = PARAMS.rem_offset;
+      } else {
+        stageOffset = PARAMS.light_offset;
       }
 
-      if (toss > 0) {
-        const damping = 1.0 / (1.0 + 0.25 * toss);
-        offset *= damping;
+      const circadianOffset = PARAMS.hour_linear * hour + PARAMS.hour_quad * (hour * hour);
+      let totalOffset = ambientComp + stageOffset + circadianOffset;
+
+      if (currentStage === "REM") {
+        totalOffset = Math.max(PARAMS.rem_min_offset, totalOffset);
       }
 
-      const clamped = Math.max(-5.0, Math.min(5.0, offset));
+      const clamped = Math.max(-5.0, Math.min(5.0, totalOffset));
       const valEl = document.getElementById('podOffset');
       const descEl = document.getElementById('podActionDesc');
 

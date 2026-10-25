@@ -1,7 +1,7 @@
 # train.py — AGENT PLAYGROUND
 from prepare import run_simulation
 
-PARAMS = {  # fitted by scipy.optimize (Powell) in loop_v2.py
+PARAMS = {  # fitted by scipy.optimize (Powell) in evaluator.py
     'ambient_ref': 68.074612,
     'ambient_slope': -0.406405,
     'deep_slope_adj': -0.143311,

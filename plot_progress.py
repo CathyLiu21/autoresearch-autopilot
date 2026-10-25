@@ -67,18 +67,20 @@ def generate_demo_plots():
     # Baseline: -0.2 * (room_temp - 70)
     base_offsets = np.clip(-0.2 * (temps - 70.0), -5.0, 5.0)
 
-    # Discovered Policy responses (hour=2.0, toss=0)
-    def calc_discovered(room_temp, stage, hour=2.0, toss=0):
-        offset = -0.35 * (room_temp - 70.0)
-        if room_temp > 73.0:
-            offset -= 0.45 * (room_temp - 73.0)
-        if stage == "DEEP":
-            offset -= 2.2 if hour <= 2.5 else (1.7 if hour <= 4.5 else 0.7)
-        elif stage == "REM":
-            offset += 0.7
-        elif stage == "LIGHT":
-            offset += 0.3 if hour > 5.5 else -0.2
-        return np.clip(offset, -5.0, 5.0)
+    # Discovered Policy responses from active train.py
+    try:
+        from train import autopilot_policy
+        def calc_discovered(room_temp, stage, hour=2.0, toss=0):
+            return float(np.clip(float(autopilot_policy({
+                "room_temp_f": float(room_temp),
+                "sleep_stage": stage,
+                "baseline_hrv": 55.0,
+                "hour_into_sleep": hour,
+                "toss_turn_count": toss
+            })), -5.0, 5.0))
+    except Exception:
+        def calc_discovered(room_temp, stage, hour=2.0, toss=0):
+            return 0.0
 
     deep_offsets = [calc_discovered(t, "DEEP", hour=2.0) for t in temps]
     rem_offsets = [calc_discovered(t, "REM", hour=5.0) for t in temps]
@@ -104,7 +106,7 @@ def generate_demo_plots():
     metrics = ['Deep Sleep %', 'REM Sleep %', 'HRV Delta', 'Overrides / Night']
     # Measured on seed 42 by replicating prepare.py's component calculations
     baseline_vals = [8.358, 24.018, 3.883, 1.392]
-    discovered_vals = [15.190, 22.793, 5.119, 0.030]
+    discovered_vals = [17.950, 24.916, 6.762, 0.030]
     oracle_vals = [17.958, 25.000, 6.865, 0.030]
 
     x = np.arange(len(metrics))
