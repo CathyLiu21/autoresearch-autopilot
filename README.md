@@ -73,7 +73,7 @@ LLMs excel at high-level reasoning (e.g. *"human body temperature follows a circ
 
 ---
 
-## Discovered Policy (commit `e58b051`)
+## Discovered Policy 
 
 ```python
 PARAMS = {
