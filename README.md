@@ -73,7 +73,7 @@ LLMs excel at high-level reasoning (e.g. *"human body temperature follows a circ
 
 ---
 
-## Discovered Policy 
+## Discovered Policy
 
 ```python
 PARAMS = {
@@ -125,19 +125,23 @@ def autopilot_policy(state: dict, params: dict = PARAMS) -> float:
 
 ---
 
-## Convergence & Commits
+## Research Progression & Breakthroughs
 
 ![Autoresearch Demo Plot](autoresearch_demo_plot.png)
 
-```text
-* e58b051  sri: 39.73812 (iter 5: parabolic circadian curve + deep sleep nadir + REM protection)
-* c87d51f  sri: 39.63580 (iter 2: stage-dependent ambient slope elasticity)
-* 3f0686b  sri: 38.32656 (iter 1: continuous circadian warming ramp + hot elasticity)
-* 920d31a  sri: 33.54104 (iter 0: incumbent baseline from v1 run)
-* dada974  sri: 33.06498 (v1 iter 9: continuous ambient slope)
-* 586e1fc  sri: 32.44663 (v1 iter 1: stage offsets + toss damping)
-* 8e1dd8f  sri: -29.4900 (v1 baseline: static linear compensation)
-```
+The autonomous loop ratcheted the policy across progressive breakthroughs, continuously climbing from `-29.49` to near-ceiling `+39.74` SRI:
+
+| Stage | Score (SRI) | Gap Closed | Core Breakthrough / Physiological Mechanism |
+| :--- | :---: | :---: | :--- |
+| **v2 Champion** | **+39.74** | **99.5%** | **Parabolic circadian nadir** + early deep-sleep cooling assist + REM thermal floor (SciPy continuous optimization) |
+| **v2 Milestone 2** | **+39.64** | 99.3% | **Stage-dependent ambient elasticity** (decoupling autonomic tone across DEEP and REM) |
+| **v2 Milestone 1** | **+38.33** | 97.2% | **Continuous circadian warming ramp** (`hour_slope * hour`) replacing rigid step functions |
+| **v1 Incumbent** | **+33.54** | 90.7% | Continuous ambient slope across full room temperature range |
+| **v1 Prototype** | **+32.45** | 89.0% | Discrete stage offsets (DEEP cold, REM warm) + piecewise room thresholds |
+| **Initial Baseline** | **-29.49** | 0.0% | Naive static linear compensation: `-0.2 * (room_temp - 70.0)` |
+
+> [!NOTE]
+> Each milestone above represents a permanent Git commit retained by the statistical ratchet ($\text{LCB}_{95\%} \ge +0.05$ SRI). Candidates that yielded micro-noise or regressions were automatically reverted via `git reset --hard`.
 
 ---
 
