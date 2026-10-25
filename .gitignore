@@ -5,3 +5,6 @@ __pycache__/
 service_account.json
 *-f62f25860cc7.json
 runs/
+.DS_Store
+*.swp
+*.swo
