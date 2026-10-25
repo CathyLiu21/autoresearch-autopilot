@@ -64,7 +64,7 @@ LLMs excel at high-level reasoning (e.g. *"human body temperature follows a circ
 - Executes candidate policies in an isolated subprocess to prevent state corruption or memory leaks.
 - Pins `prepare.py` against `prepare.sha256`. Any modification to the simulator triggers an immediate abort.
 - Traps monkey-patching, global state mutations, or RNG tampering (`TamperError`).
-- Replaces single-seed evaluations with **20 acceptance seeds** evaluated via **paired t-test** ($H_0: \mu_{\text{diff}} \le 0.05$). A candidate is only committed if its 95% Lower Confidence Bound (LCB) exceeds `+0.05 SRI`.
+- Replaces single-seed evaluations with **20 acceptance seeds** evaluated via a **paired t-test** (null hypothesis: mean gain ≤ 0.05). A candidate is only committed if its 95% Lower Confidence Bound (LCB) exceeds `+0.05 SRI`.
 
 ### 3. AST Deduplication & Experiment Memory
 - Parses candidate code into Python AST, stripping comments, variable names, and whitespace to form a canonical structural hash.
@@ -141,7 +141,7 @@ The autonomous loop ratcheted the policy across progressive breakthroughs, conti
 | **Initial Baseline** | **-29.49** | 0.0% | Naive static linear compensation: `-0.2 * (room_temp - 70.0)` |
 
 > [!NOTE]
-> Each milestone above represents a permanent Git commit retained by the statistical ratchet ($\text{LCB}_{95\%} \ge +0.05$ SRI). Candidates that yielded micro-noise or regressions were automatically reverted via `git reset --hard`.
+> Each milestone above represents a permanent Git commit retained by the statistical ratchet (95% LCB gain ≥ +0.05 SRI). Candidates that yielded micro-noise or regressions were automatically reverted via `git reset --hard`.
 
 ---
 
