@@ -71,6 +71,14 @@ LLMs excel at high-level reasoning (e.g. *"human body temperature follows a circ
 - Repeated proposals are rejected immediately before spending LLM tokens or execution time.
 - Compiles past hypotheses, parameter values, and acceptance/rejection causes into a concise context memory for subsequent iterations.
 
+### 4. CI/CD Statistical Release Gate & MLflow Tracking (`ci_gate.py` & GitHub Actions)
+- **Automated PR Release Gate (`.github/workflows/ci_eval_gate.yml`)**: Every push and pull request runs a 5-stage verification pipeline:
+  1. Verifies the SHA-256 cryptographic lock on `prepare.py` (`prepare.sha256`).
+  2. Validates the static AST contract and canonical structure hash of `train.py`.
+  3. Executes an isolated 41-seed evaluation (`20 ACCEPT_SEEDS + 20 HOLDOUT_SEEDS + seed 42`) with runtime RNG and monkey-patch tamper traps.
+  4. Enforces a **20-seed paired t-test (95% LCB > 0)** and **Holm-Bonferroni step-down FWER control ($\alpha = 0.01$)** across acceptance and holdout cohorts.
+  5. Logs policy parameters (`PARAMS`), multi-seed metrics, and `runs/ci_gate_report.json` to **MLflow (`mlruns/`)**.
+
 ---
 
 ## Discovered Policy
@@ -158,6 +166,9 @@ autoresearch-autopilot/
 ├── plot_progress.py           # Generates 3-panel publication-grade autoresearch_demo_plot.png
 ├── dashboard.html             # Interactive glassmorphic dashboard + real-time policy simulator
 ├── history.json               # Full iteration history (scores, LCB, hypotheses, git commits)
+├── ci_gate.py                 # CI/CD 41-seed statistical release gate + Holm-Bonferroni FWER + MLflow logger
+├── tests/test_ci_eval_gate.py # Automated unit & tamper-detection test suite (SHA-256, RNG trap, AST hash, FWER)
+├── .github/workflows/         # GitHub Actions CI/CD regression gate (ci_eval_gate.yml)
 └── autoresearch_demo_plot.png # Visual summary of ratchet convergence
 ```
 
@@ -168,6 +179,9 @@ autoresearch-autopilot/
 ```bash
 git clone https://github.com/CathyLiu21/autoresearch-autopilot.git && cd autoresearch-autopilot
 uv sync
+# Run CI/CD unit tests & 41-seed statistical release gate with MLflow logging
+uv run python -m unittest discover -s tests -v
+uv run python ci_gate.py --strict --out runs/ci_gate_report.json
 # Put Google Cloud service-account key at service_account.json (gitignored)
 uv run python loop.py --iterations 10
 uv run python plot_progress.py   # Regenerate progress plot

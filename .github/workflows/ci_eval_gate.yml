@@ -1,0 +1,48 @@
+name: Autoresearch CI/CD Statistical Release Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  statistical-eval-gate:
+    name: SHA-256 Lock, 20-Seed Paired t-Test & Holm-Bonferroni FWER Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python 3.13
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --frozen || uv pip install --system numpy scipy pydantic
+
+      - name: Verify SHA-256 Benchmark Lock (prepare.py)
+        run: |
+          EXPECTED=$(cat prepare.sha256 | tr -d '[:space:]')
+          ACTUAL=$(sha256sum prepare.py | awk '{print $1}')
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "FATAL: prepare.py SHA-256 mismatch ($ACTUAL != $EXPECTED)"
+            exit 1
+          fi
+
+      - name: Run Unit & Tamper-Detection Test Suite
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Execute 41-Seed Statistical Release Gate & Log to MLflow
+        run: uv run python ci_gate.py --strict --out runs/ci_gate_report.json
+
+      - name: Upload CI Evaluation Report & MLflow Run Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: autoresearch-ci-eval-artifacts
+          path: |
+            runs/ci_gate_report.json
+            mlruns/
+
